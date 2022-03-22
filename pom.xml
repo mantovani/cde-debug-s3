@@ -5,7 +5,7 @@
   <artifactId>bugcde</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>bugcde Maven Webapp</name>
+  <name>bugcde</name>
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>
