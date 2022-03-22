@@ -27,10 +27,19 @@ import software.amazon.awssdk.services.sts.model.StsException;
 public class S3Utils {
 
     public static AmazonS3 getS3ClientIAM( Regions regions) {
-        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(regions)
-                .withCredentials(new InstanceProfileCredentialsProvider(false)) .build();
+        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(regions).build();
         return s3;
     }
+
+    public static StsClient getStrClient2() {
+        software.amazon.awssdk.regions.Region region = software.amazon.awssdk.regions.Region.US_EAST_1;
+        StsClient stsClient = StsClient.builder()
+                .region(region)
+                .build();
+
+        return stsClient;
+    }
+
     public static void getCallerId(StsClient stsClient) {
         try {
             GetCallerIdentityResponse response = stsClient.getCallerIdentity();
@@ -248,6 +257,7 @@ public class S3Utils {
 
         if (s3Client.doesObjectExist(sourceBucketName, sourceObjectKey)) {
             ObjectMetadata objectMetadata = s3Client.getObjectMetadata(sourceBucketName,sourceObjectKey);
+            //objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
             long inputSize = objectMetadata.getContentLength();
             if (inputSize >= 1024*1024*1024) {
                 // size greater than 1GB, let's use multipartload
@@ -257,6 +267,11 @@ public class S3Utils {
             else {
                 CopyObjectRequest copyObjRequest = new CopyObjectRequest(sourceBucketName, sourceObjectKey
                         , destBucketName, destObjectKey);
+                copyObjRequest
+                        .withCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
+                ObjectMetadata meta = new ObjectMetadata();
+                meta.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+                copyObjRequest.setNewObjectMetadata(meta);
                 s3Client.copyObject(copyObjRequest);
             }
             ObjectMetadata objectMetadata2 = s3Client.getObjectMetadata(destBucketName,destObjectKey);
