@@ -14,13 +14,15 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Pattern;
+import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.services.sts.model.GetCallerIdentityResponse;
+import software.amazon.awssdk.services.sts.model.StsException;
 
 public class S3Utils {
 
@@ -28,6 +30,18 @@ public class S3Utils {
         AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(regions)
                 .withCredentials(new InstanceProfileCredentialsProvider(false)) .build();
         return s3;
+    }
+    public static void getCallerId(StsClient stsClient) {
+        try {
+            GetCallerIdentityResponse response = stsClient.getCallerIdentity();
+
+            System.out.println("The user id is" +response.userId());
+            System.out.println("The ARN value is" +response.arn());
+
+        } catch (StsException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     public static AmazonS3 getS3Client(String accessKey, String secretKey, Regions defaultRegion) {
